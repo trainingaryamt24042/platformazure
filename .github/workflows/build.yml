@@ -1,0 +1,67 @@
+name: Azure Platform Operations
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: "Select operation"
+        required: true
+        type: choice
+        options:
+          - create_storage
+          - delete_storage
+          - create_container
+          - create_vm
+          - delete_vm
+          - create_keyvault
+          - bind_ad_group
+          - unbind_ad_group
+
+jobs:
+  run-operation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Execute selected operation
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          case "${{ inputs.operation }}" in
+            create_storage)
+              python scripts/storage/create.py scripts/storage/input.csv
+              ;;
+            delete_storage)
+              python scripts/storage/delete.py scripts/storage/input.csv
+              ;;
+            create_container)
+              python scripts/container/create.py scripts/container/input.csv
+              ;;
+            create_vm)
+              python scripts/vm/create.py scripts/vm/input.csv
+              ;;
+            delete_vm)
+              python scripts/vm/delete.py scripts/vm/input.csv
+              ;;
+            create_keyvault)
+              python scripts/keyvault/create.py scripts/keyvault/input.csv
+              ;;
+            bind_ad_group)
+              python scripts/ad/bind.py scripts/ad/input.csv
+              ;;
+            unbind_ad_group)
+              python scripts/ad/unbind.py scripts/ad/input.csv
+              ;;
+          esac
